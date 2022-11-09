@@ -298,8 +298,7 @@ fun executeNode(node : SymbolicNode, repos: Repository, usedType: KClass<out Ded
                 // then give it to the evaluateSMT
 
                 l.equations.forEach{
-                    if(it.tail1.toString().startsWith("p")) probVars.add(it.tail1)
-                    if(it.tail2.toString().startsWith("p")) probVars.add(it.tail2)
+                    it.collectVars(probVars)
                 }
                 equations.addAll(l.equations)
 

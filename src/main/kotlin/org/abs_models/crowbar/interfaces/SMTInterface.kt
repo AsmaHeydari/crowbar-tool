@@ -298,6 +298,10 @@ fun translateType(type:Type) : String{
 
 fun generateSMT4PDL(probVars : Set<String>, equations : Set<PDLEquation>) : String{
     var heaps = mutableSetOf<String>()
+    heaps.add("(define-fun min ((x Real) (y Real)) Real\n" +
+            "  (ite (< x y) x y))\n"+
+            "(define-fun max ((x Real) (y Real)) Real\n" +
+            "  (ite (< x y) y x))")
     probVars.forEach{
         heaps.add("(declare-fun ${it} () Real)")
     }
@@ -308,11 +312,7 @@ fun generateSMT4PDL(probVars : Set<String>, equations : Set<PDLEquation>) : Stri
     }
 
     equations.forEach{
-        val head = it.head
-        val split = it.split
-        val tail1 = it.tail1
-        val tail2 = it.tail2
-        heaps.add("(assert (<= ${head} (+ (* ${split} ${tail1}) (* (- 1 ${split}) ${tail2}))))")
+        heaps.add(it.toSMT())
     }
     heaps.add("(check-sat)")
     output(heaps.toString(), Verbosity.SILENT)

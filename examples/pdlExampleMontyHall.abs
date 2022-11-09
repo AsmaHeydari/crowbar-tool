@@ -1,6 +1,6 @@
 module Dummy;
-/*Expected result from Z3: true*/
-/*Generated result by Z3: true*/
+/*Expected result from Z3: true if sw = 1, false if sw = 0*/
+/*Generated result by Z3: true if sw = 1, false if sw = 0*/
 data NewSpec = Demonic | Prob(Rat);
 
 [Spec: Ensures(choice == prize)]
@@ -33,7 +33,7 @@ if(prize==choice){
     else { open = (prize + 2) % 3; }
 }
 else {
-    prize = ((2 * prize) - choice) % 3;
+    open = ((2 * prize) - choice) % 3;
 }
 
 if(sw==1){

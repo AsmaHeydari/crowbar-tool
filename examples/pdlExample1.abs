@@ -1,6 +1,6 @@
 module Dummy;
-/*Expected result from Z3: true*/
-/*Generated result by Z3: true*/
+/*Expected result from Z3: false*/
+/*Generated result by Z3: false*/
 data NewSpec = Demonic | Prob(Rat);
 
 [Spec: Ensures(x == 2)]

@@ -57,10 +57,61 @@ interface PDLType : DeductType {
 
 }
 
-data class PDLEquation(val head : String, val split : String, val tail1 : String, val tail2 : String){
+abstract class PDLEquation{
+    abstract fun collectVars( set : MutableSet<String>)
+    abstract fun toSMT() : String
+}
+
+data class PDLSetEquation(val head : String, val value : String) : PDLEquation(){
+    override fun collectVars(set: MutableSet<String>) {
+        if(head.startsWith("p")) set.add(head)
+        if(value.startsWith("p")) set.add(value)
+    }
+
+    override fun toSMT(): String = "(assert (= $head $value))"
+
+    override fun toString(): String =
+        "$head = $value"
+
+}
+data class PDLBindEquation(val head : String, val value : String) : PDLEquation(){
+    override fun collectVars(set: MutableSet<String>) {
+        if(head.startsWith("p")) set.add(head)
+        if(value.startsWith("p")) set.add(value)
+    }
+
+    override fun toSMT(): String = "(assert (<= $head $value))"
+
+    override fun toString(): String =
+        "$head <= $value"
+
+}
+data class PDLMinEquation(val head : String, val tail1 : String, val tail2 : String) : PDLEquation(){
+    override fun collectVars(set: MutableSet<String>) {
+        if(head.startsWith("p")) set.add(head)
+        if(tail1.startsWith("p")) set.add(tail1)
+        if(tail2.startsWith("p")) set.add(tail2)
+    }
+
+    override fun toSMT(): String = "(assert (<= $head (min $tail1 $tail2)))"
+
+    override fun toString(): String =
+        "$head <= min($tail1, $tail2)"
+
+}
+
+data class PDLSplitEquation(val head : String, val split : String, val tail1 : String, val tail2 : String) : PDLEquation(){
     override fun toString(): String =
         "$head = $split*$tail1 + (1-$split)*$tail2 "
 
+    override fun collectVars(set: MutableSet<String>) {
+        if(head.startsWith("p")) set.add(head)
+        if(tail1.startsWith("p")) set.add(tail1)
+        if(tail2.startsWith("p")) set.add(tail2)
+    }
+
+    override fun toSMT(): String
+        = "(assert (<= ${head} (+ (* ${split} ${tail1}) (* (- 1 ${split}) ${tail2}))))"
 }
 
 data class PDLAbstractVar(val name : String) : PDLType, AbstractVar{
@@ -104,18 +155,18 @@ object PDLSkip : Rule(Modality(
             info = NoInfo()
         )
 
-        val stNode: StaticNode?
+        var stNode: StaticNode? = null
         if(res.evaluate() && spec.prob.startsWith("p")){ //We need to do this in a proper way
             println(spec.prob + ">=1")
-            val eqT = PDLEquation("1","1", spec.prob, "0")
+            val eqT = PDLSetEquation(spec.prob, "1")
             stNode = StaticNode("",spec.equations.plus(eqT))//.plus(eqT)
 //            println("Static Node: " + stNode.toString())
-        } else{
+        } else if(spec.prob.startsWith("p")){
             println(spec.prob + "<=0")
-            val eqF = PDLEquation(spec.prob,"1","0", "0")
-            stNode = StaticNode("",spec.equations)//.plus(eqF)
+            val eqF = PDLSetEquation(spec.prob,"0")
+            stNode = StaticNode("",spec.equations.plus(eqF))
 //            println("Static Node: " + stNode.toString())
-        }
+        } else  stNode = StaticNode("",spec.equations)
 //        val zeros  = divByZeroNodes(listOf(retExpr), SkipStmt, input, repos)
         return listOf(stNode)
     }
@@ -220,7 +271,7 @@ object PDLSkip : Rule(Modality(
             if(shortThen && !shortElse) next = next + listOf(SymbolicNode(resElse, info = InfoIfThen(guardExpr)))
             else if(shortElse && !shortThen) next = next +listOf(SymbolicNode(resThen, info = InfoIfElse(guardExpr)))
             else next = next+ listOf(SymbolicNode(resThen, info = InfoIfThen(guardExpr)), SymbolicNode(resElse, info = InfoIfElse(guardExpr)))
-            return listOf<SymbolicTree>(SymbolicNode(resThen, info = InfoIfThen(guardExpr)), SymbolicNode(resElse, info = InfoIfElse(guardExpr))) + zeros
+            return next //listOf<SymbolicTree>(SymbolicNode(resThen, info = InfoIfThen(guardExpr)), SymbolicNode(resElse, info = InfoIfElse(guardExpr))) + zeros
         }
     }
 
@@ -235,11 +286,17 @@ object PDLSkip : Rule(Modality(
             val contBody = SeqStmt(ScopeMarker, cond.map[StmtAbstractVar("CONT")] as Stmt) // Add a ScopeMarker statement to detect scope closure
             //val guardExpr = cond.map[ExprAbstractVar("LHS")] as Expr
 
+            val spec = cond.map[PDLAbstractVar("TYPE")] as PDLSpec
+            val p1 = FreshGenerator.getFreshPP().toSMT()
+            val p2 = FreshGenerator.getFreshPP().toSMT()
+            val p = spec.prob
+            val eqs  = spec.equations.plus(PDLMinEquation(p,p1,p2))
+
             //then
            // val guardYes = exprToForm(guardExpr)
             val bodyYes = SeqStmt(cond.map[StmtAbstractVar("THEN")] as Stmt, contBody)
             val updateYes = input.update
-            val typeYes = cond.map[PDLAbstractVar("TYPE")] as DeductType
+            val typeYes = PDLSpec(spec.post, p1, eqs)
             val resThen = SymbolicState(input.condition, updateYes, Modality(bodyYes, typeYes), input.exceptionScopes)
 //            println("PDLDemonIf is applied: ")
 //            println("Demonic Then branch: "+ resThen.toString())
@@ -247,7 +304,7 @@ object PDLSkip : Rule(Modality(
             //val guardNo = Not(exprToForm(guardExpr))
             val bodyNo = SeqStmt(cond.map[StmtAbstractVar("ELSE")] as Stmt, contBody)
             val updateNo = input.update
-            val typeNo = cond.map[PDLAbstractVar("TYPE")] as DeductType
+            val typeNo = PDLSpec(spec.post, p2, eqs)
             val resElse = SymbolicState(input.condition, updateNo, Modality(bodyNo, typeNo), input.exceptionScopes)
 //            println("Demonic Else branch: "+ resElse.toString())
 
@@ -282,7 +339,7 @@ class PDLProbIf(val repos: Repository) : Rule(Modality(
         val resThen = SymbolicState(
             input.condition,
             updateYes,
-            Modality(bodyYes, PDLSpec(spec.post, p1, spec.equations.plus(PDLEquation(p, expTerm, p1, p2)))),
+            Modality(bodyYes, PDLSpec(spec.post, p1, spec.equations.plus(PDLSplitEquation(p, expTerm, p1, p2)))),
             input.exceptionScopes
         )//Ask Eduard: Should we also add 0 <= p1 <=1?
 //        println("PDLProbIf is applied: ")
@@ -293,7 +350,7 @@ class PDLProbIf(val repos: Repository) : Rule(Modality(
         val resElse = SymbolicState(
             input.condition,
             updateNo,
-            Modality(bodyNo, PDLSpec(spec.post, p2, spec.equations.plus(PDLEquation(p, expTerm, p1, p2)))),
+            Modality(bodyNo, PDLSpec(spec.post, p2, spec.equations.plus(PDLSplitEquation(p, expTerm, p1, p2)))),
             input.exceptionScopes
         )
         println("Probablistic Else branch: " + spec.equations)
@@ -315,7 +372,7 @@ class PDLWeakening(val repos: Repository) : Rule(Modality(
             println("spec: " + spec)
 
         val newProb = FreshGenerator.getFreshPP().toSMT()
-        val newEq = PDLEquation(spec.prob, " 1 ", newProb, " 0 ")
+        val newEq = PDLSplitEquation(spec.prob, " 1 ", newProb, " 0 ") //??
         val sStat = SymbolicState(
             input.condition,
             input.update,
