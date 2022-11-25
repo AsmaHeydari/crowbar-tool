@@ -4,6 +4,7 @@ import org.abs_models.crowbar.data.*
 import org.abs_models.crowbar.interfaces.translateExpression
 import org.abs_models.crowbar.interfaces.translateStatement
 import org.abs_models.crowbar.investigator.Type
+import org.abs_models.crowbar.investigator.renderFormula
 import org.abs_models.crowbar.main.*
 import org.abs_models.crowbar.rule.FreshGenerator
 import org.abs_models.crowbar.rule.MatchCondition
@@ -361,6 +362,85 @@ class PDLProbIf(val repos: Repository) : Rule(Modality(
         return listOf<SymbolicTree>(SymbolicNode(resThen, info = NoInfo()), SymbolicNode(resElse, info = NoInfo()))
     }
 }
+
+
+class PDLWhile(val repos: Repository) : Rule(Modality(
+    SeqStmt(WhileStmt(ExprAbstractVar("LHS"), StmtAbstractVar("BODY"), PPAbstractVar("ID"),
+        FormulaAbstractVar("LINV")),StmtAbstractVar("CONT")),
+    PDLAbstractVar("Spec"))) {
+
+    override fun transform(cond: MatchCondition, input: SymbolicState): List<SymbolicTree> {
+
+        val body = cond.map[StmtAbstractVar("BODY")] as Stmt
+        val contBody = SeqStmt(ScopeMarker, cond.map[StmtAbstractVar("CONT")] as Stmt) // Add a ScopeMarker statement to detect scope closure
+        val guardExpr = cond.map[ExprAbstractVar("LHS")] as Expr
+        val spec = cond.map[PDLAbstractVar("Spec")] as PDLSpec
+        val inv = cond.map[FormulaAbstractVar("WhileInv")] as Formula
+
+        val pPrime = FreshGenerator.getFreshPP().toSMT()
+        val p1 = FreshGenerator.getFreshPP().toSMT()
+        val p2 = FreshGenerator.getFreshPP().toSMT()
+        val p3 = FreshGenerator.getFreshPP().toSMT()
+        val p4 = FreshGenerator.getFreshPP().toSMT()
+        val p = spec.prob
+
+        // init
+        val init = SymbolicState(
+            input.condition,
+            input.update,
+            Modality(SkipStmt, PDLSpec(inv, pPrime, spec.equations.plus(PDLSplitEquation(pPrime, pPrime, p3, p4)))),
+            input.exceptionScopes
+        )
+        println("While Init: " + spec.equations)
+
+        // Step Cases:
+        val guard = exprToForm(guardExpr)
+        // step case1: inv & guard
+        val resStep1 = SymbolicState(
+            And(input.condition,And(inv,guard)) ,
+            EmptyUpdate,
+            Modality(body, PDLSpec(inv, p3, spec.equations.plus(PDLSplitEquation(pPrime, pPrime, p3, p4)))),
+            input.exceptionScopes
+        )
+        println("While Step Case 1: " + spec.equations)
+        // step case2: !inv & guard
+        val resStep2 = SymbolicState(
+            And(Not(inv),guard) ,
+            EmptyUpdate,
+            Modality(body, PDLSpec(inv, p4, spec.equations.plus(PDLSplitEquation(pPrime, pPrime, p3, p4)))),
+            input.exceptionScopes
+        )
+        println("While Step Case 2: " + spec.equations)
+
+        //Use Cases:
+        val guardNo = Not(exprToForm(guardExpr))
+        // use case: inv & !guard
+        val resUse1 = SymbolicState(
+            And(inv,guardNo) ,
+            EmptyUpdate,
+            Modality(contBody, PDLSpec(spec.post, p1, spec.equations.plus(PDLSplitEquation(p, pPrime, p1, p2)))),
+            input.exceptionScopes
+        )
+        println("While Use Case 1: " + spec.equations)
+        // use case: !inv & !guard
+        val resUse2 = SymbolicState(
+            And(Not(inv),guardNo),
+            EmptyUpdate,
+            Modality(contBody, PDLSpec(spec.post, p2, spec.equations.plus(PDLSplitEquation(p, pPrime, p1, p2)))),
+            input.exceptionScopes
+        )
+        println("While Use Case 2: " + spec.equations)
+
+
+
+        return listOf<SymbolicTree>(SymbolicNode(init, info = NoInfo()),
+                                    SymbolicNode(resStep1, info = NoInfo()), SymbolicNode(resStep2, info = NoInfo()),
+                                    SymbolicNode(resUse1, info = NoInfo()), SymbolicNode(resUse2, info = NoInfo()))
+    }
+}
+
+
+// This isn't in use.
 class PDLWeakening(val repos: Repository) : Rule(Modality(
     StmtAbstractVar("COUNT")
     , PDLAbstractVar("Spec"))) {
