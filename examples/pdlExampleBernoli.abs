@@ -3,14 +3,15 @@ module Dummy;
 /*Generated result by Z3: true*/
 data NewSpec = Demonic | Prob(Rat);
 
-[Spec: Ensures((((c / 20) - 0.5) > 0.4) || (((c / 20) - 0.5) < -0.4))]
+[Spec: Ensures((((c / 10) - 0.5) > 0.4) || (((c / 10) - 0.5) < -0.4))]
 [Spec: Prob(1/2)]
+[Spec: WhileInv(0 <= i && i <= 10 && 0 <= s && s < 10 && 0 <= c && c < 10)]
 {
 Int i = 0;
 Int c = 0;
 Int s = 0;
-[Spec: WhileInv(0 <= i && i <= 20 && 0 <= s && s < 20 && 0 <= c && c < 20)]
-while( i < 20 ){
+
+while( i < 10 ){
     [Spec: Prob(1/2)]
     if( True ) { s = 0; }
     else { s = 1; }

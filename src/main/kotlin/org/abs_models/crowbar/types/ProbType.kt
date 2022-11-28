@@ -1,10 +1,7 @@
 package org.abs_models.crowbar.types
 
 import org.abs_models.crowbar.data.*
-import org.abs_models.crowbar.interfaces.translateExpression
 import org.abs_models.crowbar.interfaces.translateStatement
-import org.abs_models.crowbar.investigator.Type
-import org.abs_models.crowbar.investigator.renderFormula
 import org.abs_models.crowbar.main.*
 import org.abs_models.crowbar.rule.FreshGenerator
 import org.abs_models.crowbar.rule.MatchCondition
@@ -46,8 +43,10 @@ interface PDLType : DeductType {
         println("Post Cond: "+ postCond.toString());
         val prob = extractTermSpec(mainBlock, "Prob")?.toSMT()
         println("Probability: "+ prob);
+        val inv = extractSpec(mainBlock, "WhileInv",mainBlock.type)
+        println("While Loop Invariant: "+ inv.toString());
 
-        return PDLSpec(postCond, prob.toString(), setOf())
+        return PDLSpec(postCond, prob.toString(), setOf(), inv)
 
         //TODO("IMPLEMENT ME")
     }
@@ -122,9 +121,9 @@ data class PDLAbstractVar(val name : String) : PDLType, AbstractVar{
 }
 
 
-data class PDLSpec(val post : Formula, val prob : String, val equations : Set<PDLEquation>) : PDLType {
+data class PDLSpec(val post: Formula, val prob: String, val equations: Set<PDLEquation>, val whileInv: Formula?) : PDLType {
     override fun prettyPrint(): String {
-        return post.prettyPrint()+" with "+prob+ " "+equations.joinToString(", ")
+        return post.prettyPrint()+" with "+prob+ " "+equations.joinToString(", ")+whileInv
     }
     override fun iterate(f: (Anything) -> Boolean) : Set<Anything> = super.iterate(f)
 }
@@ -297,7 +296,7 @@ object PDLSkip : Rule(Modality(
            // val guardYes = exprToForm(guardExpr)
             val bodyYes = SeqStmt(cond.map[StmtAbstractVar("THEN")] as Stmt, contBody)
             val updateYes = input.update
-            val typeYes = PDLSpec(spec.post, p1, eqs)
+            val typeYes = PDLSpec(spec.post, p1, eqs, null)
             val resThen = SymbolicState(input.condition, updateYes, Modality(bodyYes, typeYes), input.exceptionScopes)
 //            println("PDLDemonIf is applied: ")
 //            println("Demonic Then branch: "+ resThen.toString())
@@ -305,7 +304,7 @@ object PDLSkip : Rule(Modality(
             //val guardNo = Not(exprToForm(guardExpr))
             val bodyNo = SeqStmt(cond.map[StmtAbstractVar("ELSE")] as Stmt, contBody)
             val updateNo = input.update
-            val typeNo = PDLSpec(spec.post, p2, eqs)
+            val typeNo = PDLSpec(spec.post, p2, eqs, null)
             val resElse = SymbolicState(input.condition, updateNo, Modality(bodyNo, typeNo), input.exceptionScopes)
 //            println("Demonic Else branch: "+ resElse.toString())
 
@@ -337,10 +336,11 @@ class PDLProbIf(val repos: Repository) : Rule(Modality(
         //then
         val bodyYes = appendStmt(cond.map[StmtAbstractVar("THEN")] as Stmt, contBody)
         val updateYes = input.update
+        val newEq = spec.equations.plus(PDLSplitEquation(p, expTerm, p1, p2))
         val resThen = SymbolicState(
             input.condition,
             updateYes,
-            Modality(bodyYes, PDLSpec(spec.post, p1, spec.equations.plus(PDLSplitEquation(p, expTerm, p1, p2)))),
+            Modality(bodyYes, PDLSpec(spec.post, p1, newEq,null)),
             input.exceptionScopes
         )//Ask Eduard: Should we also add 0 <= p1 <=1?
 //        println("PDLProbIf is applied: ")
@@ -351,10 +351,10 @@ class PDLProbIf(val repos: Repository) : Rule(Modality(
         val resElse = SymbolicState(
             input.condition,
             updateNo,
-            Modality(bodyNo, PDLSpec(spec.post, p2, spec.equations.plus(PDLSplitEquation(p, expTerm, p1, p2)))),
+            Modality(bodyNo, PDLSpec(spec.post, p2, newEq,null)),
             input.exceptionScopes
         )
-        println("Probablistic Else branch: " + spec.equations)
+        println("Probablistic Else branch: " + newEq)
 
 //        val shortThen = LogicNode(input.condition, False).evaluate()
 //        val shortElse = LogicNode(input.condition, UpdateOnFormula(updateYes, guardNo)), False).evaluate()
@@ -372,65 +372,72 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
     override fun transform(cond: MatchCondition, input: SymbolicState): List<SymbolicTree> {
 
         val body = cond.map[StmtAbstractVar("BODY")] as Stmt
+//        println("body: "+body)
         val contBody = SeqStmt(ScopeMarker, cond.map[StmtAbstractVar("CONT")] as Stmt) // Add a ScopeMarker statement to detect scope closure
         val guardExpr = cond.map[ExprAbstractVar("LHS")] as Expr
+//        println("guard:  " + guardExpr)
         val spec = cond.map[PDLAbstractVar("Spec")] as PDLSpec
-        val inv = cond.map[FormulaAbstractVar("WhileInv")] as Formula
+//        println("spec: " + spec)
 
-        val pPrime = FreshGenerator.getFreshPP().toSMT()
         val p1 = FreshGenerator.getFreshPP().toSMT()
         val p2 = FreshGenerator.getFreshPP().toSMT()
         val p3 = FreshGenerator.getFreshPP().toSMT()
         val p4 = FreshGenerator.getFreshPP().toSMT()
+        val pPrime = FreshGenerator.getFreshPP().toSMT()//p5
         val p = spec.prob
 
         // init
+        var initEq = PDLSplitEquation(pPrime, pPrime, p3, p4)
+        var newEq = spec.equations.plus(initEq)
+
         val init = SymbolicState(
             input.condition,
             input.update,
-            Modality(SkipStmt, PDLSpec(inv, pPrime, spec.equations.plus(PDLSplitEquation(pPrime, pPrime, p3, p4)))),
+            Modality(SkipStmt, PDLSpec(spec.whileInv!!, pPrime, newEq, spec.whileInv)),
             input.exceptionScopes
         )
-        println("While Init: " + spec.equations)
+//        println("init eq: " + spec.equations.isEmpty())
+        println("While Init: " + newEq)
 
         // Step Cases:
         val guard = exprToForm(guardExpr)
         // step case1: inv & guard
         val resStep1 = SymbolicState(
-            And(input.condition,And(inv,guard)) ,
+            And(input.condition,And(spec.whileInv,guard)) ,
             EmptyUpdate,
-            Modality(body, PDLSpec(inv, p3, spec.equations.plus(PDLSplitEquation(pPrime, pPrime, p3, p4)))),
+            Modality(body, PDLSpec(spec.whileInv, p3, newEq, spec.whileInv)),
             input.exceptionScopes
         )
-        println("While Step Case 1: " + spec.equations)
+        println("While Step Case 1: " + newEq)
         // step case2: !inv & guard
         val resStep2 = SymbolicState(
-            And(Not(inv),guard) ,
+            And(Not(spec.whileInv),guard) ,
             EmptyUpdate,
-            Modality(body, PDLSpec(inv, p4, spec.equations.plus(PDLSplitEquation(pPrime, pPrime, p3, p4)))),
+            Modality(body, PDLSpec(spec.whileInv, p4, newEq, spec.whileInv)),
             input.exceptionScopes
         )
-        println("While Step Case 2: " + spec.equations)
+        println("While Step Case 2: " + newEq)
 
         //Use Cases:
         val guardNo = Not(exprToForm(guardExpr))
         // use case: inv & !guard
+        var newEq2 = newEq.plus(PDLSplitEquation(p, pPrime, p1, p2))
         val resUse1 = SymbolicState(
-            And(inv,guardNo) ,
+            And(spec.whileInv,guardNo) ,
             EmptyUpdate,
-            Modality(contBody, PDLSpec(spec.post, p1, spec.equations.plus(PDLSplitEquation(p, pPrime, p1, p2)))),
+            Modality(contBody, PDLSpec(spec.post, p1, newEq2, spec.whileInv)),
             input.exceptionScopes
         )
-        println("While Use Case 1: " + spec.equations)
+        println("While Use Case 1: " + newEq2)
+
         // use case: !inv & !guard
         val resUse2 = SymbolicState(
-            And(Not(inv),guardNo),
+            And(Not(spec.whileInv),guardNo),
             EmptyUpdate,
-            Modality(contBody, PDLSpec(spec.post, p2, spec.equations.plus(PDLSplitEquation(p, pPrime, p1, p2)))),
+            Modality(contBody, PDLSpec(spec.post, p2, newEq2, spec.whileInv)),
             input.exceptionScopes
         )
-        println("While Use Case 2: " + spec.equations)
-
+        println("While Use Case 2: " + newEq2)
 
 
         return listOf<SymbolicTree>(SymbolicNode(init, info = NoInfo()),
@@ -440,30 +447,29 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
 }
 
 
-// This isn't in use.
-class PDLWeakening(val repos: Repository) : Rule(Modality(
-    StmtAbstractVar("COUNT")
-    , PDLAbstractVar("Spec"))) {
+//class PDLWeakening(val repos: Repository) : Rule(Modality(
+//    StmtAbstractVar("COUNT")
+//    , PDLAbstractVar("Spec"))) {
 
-    override fun transform(cond: MatchCondition, input: SymbolicState): List<SymbolicTree> {//Why this doesn't apply?
-        val count = cond.map[StmtAbstractVar("COUNT")] as Stmt
-        val spec = cond.map[PDLAbstractVar("Spec")] as PDLSpec
-            println("count: "+count)
-            println("spec: " + spec)
-
-        val newProb = FreshGenerator.getFreshPP().toSMT()
-        val newEq = PDLSplitEquation(spec.prob, " 1 ", newProb, " 0 ") //??
-        val sStat = SymbolicState(
-            input.condition,
-            input.update,
-            Modality(count, PDLSpec(spec.post, newProb, spec.equations.plus(newEq))),
-            input.exceptionScopes
-        )
-        println("Weakening: ")
-        println(sStat.modality)
-        return listOf<SymbolicTree>(SymbolicNode(sStat, info = NoInfo()))
-    }
-}
+//    override fun transform(cond: MatchCondition, input: SymbolicState): List<SymbolicTree> {//Why this doesn't apply?
+//        val count = cond.map[StmtAbstractVar("COUNT")] as Stmt
+//        val spec = cond.map[PDLAbstractVar("Spec")] as PDLSpec
+//            println("count: "+count)
+//            println("spec: " + spec)
+//
+//        val newProb = FreshGenerator.getFreshPP().toSMT()
+//        val newEq = PDLSplitEquation(spec.prob, " 1 ", newProb, " 0 ") //??
+//        val sStat = SymbolicState(
+//            input.condition,
+//            input.update,
+//            Modality(count, PDLSpec(spec.post, newProb, spec.equations.plus(newEq), null)),
+//            input.exceptionScopes
+//        )
+//        println("Weakening: ")
+//        println(sStat.modality)
+//        return listOf<SymbolicTree>(SymbolicNode(sStat, info = NoInfo()))
+//    }
+//}
 
 
 

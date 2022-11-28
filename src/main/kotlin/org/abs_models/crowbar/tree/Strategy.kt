@@ -70,4 +70,4 @@ fun nextLTTStrategy(repos: Repository) : Strategy =
 
 //PDL type
 fun nextPDLStrategy(repos: Repository) : Strategy =
-    DefaultStrategy(listOf(PDLSkip, PDLSkipComposition, PDLLocAssign(repos), PDLIf(repos), PDLDemonIf(repos), PDLProbIf(repos), PDLScopeSkip, PDLWeakening(repos)))
+    DefaultStrategy(listOf(PDLSkip, PDLSkipComposition, PDLLocAssign(repos), PDLIf(repos), PDLDemonIf(repos), PDLProbIf(repos), PDLScopeSkip, PDLWhile(repos)))//
