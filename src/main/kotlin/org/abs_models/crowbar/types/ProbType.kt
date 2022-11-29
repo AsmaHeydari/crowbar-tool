@@ -40,11 +40,11 @@ interface PDLType : DeductType {
 
     fun extractPDLSpec(mainBlock: MainBlock) : PDLSpec{
         val postCond = extractSpec(mainBlock, "Ensures",mainBlock.type)
-        println("Post Cond: "+ postCond.toString());
+        println("Post Cond: "+ postCond.toString())
         val prob = extractTermSpec(mainBlock, "Prob")?.toSMT()
-        println("Probability: "+ prob);
+        println("Probability: "+ prob)
         val inv = extractSpec(mainBlock, "WhileInv",mainBlock.type)
-        println("While Loop Invariant: "+ inv.toString());
+        println("While Loop Invariant: "+ inv.toString())
 
         return PDLSpec(postCond, prob.toString(), setOf(), inv)
 
@@ -387,8 +387,8 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
         val p = spec.prob
 
         // init
-        var initEq = PDLSplitEquation(pPrime, pPrime, p3, p4)
-        var newEq = spec.equations.plus(initEq)
+        val initEq = PDLSplitEquation(pPrime, pPrime, p3, p4)
+        val newEq = spec.equations.plus(initEq)
 
         val init = SymbolicState(
             input.condition,
@@ -403,7 +403,7 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
         val guard = exprToForm(guardExpr)
         // step case1: inv & guard
         val resStep1 = SymbolicState(
-            And(input.condition,And(spec.whileInv,guard)) ,
+            And(spec.whileInv,guard) ,
             EmptyUpdate,
             Modality(body, PDLSpec(spec.whileInv, p3, newEq, spec.whileInv)),
             input.exceptionScopes
@@ -417,11 +417,10 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
             input.exceptionScopes
         )
         println("While Step Case 2: " + newEq)
-
         //Use Cases:
         val guardNo = Not(exprToForm(guardExpr))
         // use case: inv & !guard
-        var newEq2 = newEq.plus(PDLSplitEquation(p, pPrime, p1, p2))
+        val newEq2 = newEq.plus(PDLSplitEquation(p, pPrime, p1, p2))
         val resUse1 = SymbolicState(
             And(spec.whileInv,guardNo) ,
             EmptyUpdate,

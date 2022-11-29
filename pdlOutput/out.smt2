@@ -166,7 +166,10 @@
 ;fields declaration
     
 ;variables declaration
-    
+    (declare-const i ABS.StdLib.Int) ; i:ABS.StdLib.Int
+
+	(declare-const c ABS.StdLib.Int) ; c:<UNKNOWN>
+
 ;objects declaration
     
     
@@ -177,9 +180,9 @@
 ;fields constraints
     
     ; Precondition
-    (assert true )
+    (assert (and (not true) (not (<  i 10))) )
     ; Negated postcondition
-    (assert (not (and (and (and (and (and (<=  0 0) (<=  0 10)) (<=  0 0)) (<  0 10)) (<=  0 0)) (<  0 10)))) 
+    (assert (not (or (>  (-  (/  c 10) 0.5) 0.4) (<  (-  (/  c 10) 0.5) (- 0.4))))) 
     (check-sat)
     
     (exit)

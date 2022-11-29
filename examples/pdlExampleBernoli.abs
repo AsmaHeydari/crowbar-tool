@@ -5,12 +5,12 @@ data NewSpec = Demonic | Prob(Rat);
 
 [Spec: Ensures((((c / 10) - 0.5) > 0.4) || (((c / 10) - 0.5) < -0.4))]
 [Spec: Prob(1/2)]
-[Spec: WhileInv(0 <= i && i <= 10 && 0 <= s && s < 10 && 0 <= c && c < 10)]
 {
 Int i = 0;
 Int c = 0;
 Int s = 0;
 
+[Spec: WhileInv(0 <= i && i <= 10 && 0 <= s && s < 10 && 0 <= c && c < 10)]
 while( i < 10 ){
     [Spec: Prob(1/2)]
     if( True ) { s = 0; }
