@@ -62,45 +62,48 @@ abstract class PDLEquation{
     abstract fun toSMT() : String
 }
 
-data class PDLSetEquation(val head : String, val value : String) : PDLEquation(){
+data class PDLSetEquation(val head : String, val value : String, val frml : Formula) : PDLEquation(){
     override fun collectVars(set: MutableSet<String>) {
         if(head.startsWith("p")) set.add(head)
         if(value.startsWith("p")) set.add(value)
+        set.add(frml.toString())
     }
 
-    override fun toSMT(): String = "(assert (= $head $value))"
+    override fun toSMT(): String = "(assert (&($frml (= $head $value))))"
 
     override fun toString(): String =
         "$head = $value"
 
 }
-data class PDLBindEquation(val head : String, val value : String) : PDLEquation(){
+data class PDLBindEquation(val head : String, val value : String, val frml : Formula) : PDLEquation(){
     override fun collectVars(set: MutableSet<String>) {
         if(head.startsWith("p")) set.add(head)
         if(value.startsWith("p")) set.add(value)
+        set.add(frml.toString())
     }
 
-    override fun toSMT(): String = "(assert (<= $head $value))"
+    override fun toSMT(): String = "(assert (& ($frml (<= $head $value))))"
 
     override fun toString(): String =
         "$head <= $value"
 
 }
-data class PDLMinEquation(val head : String, val tail1 : String, val tail2 : String) : PDLEquation(){
+data class PDLMinEquation(val head : String, val tail1 : String, val tail2 : String, val frml : Formula) : PDLEquation(){
     override fun collectVars(set: MutableSet<String>) {
         if(head.startsWith("p")) set.add(head)
         if(tail1.startsWith("p")) set.add(tail1)
         if(tail2.startsWith("p")) set.add(tail2)
+        set.add(frml.toString())
     }
 
-    override fun toSMT(): String = "(assert (<= $head (min $tail1 $tail2)))"
+    override fun toSMT(): String = "(assert (& ($frml (<= $head (min $tail1 $tail2)))))"
 
     override fun toString(): String =
         "$head <= min($tail1, $tail2)"
 
 }
 
-data class PDLSplitEquation(val head : String, val split : String, val tail1 : String, val tail2 : String) : PDLEquation(){
+data class PDLSplitEquation(val head : String, val split : String, val tail1 : String, val tail2 : String, val frml : Formula) : PDLEquation(){
     override fun toString(): String =
         "$head = $split*$tail1 + (1-$split)*$tail2 "
 
@@ -108,10 +111,11 @@ data class PDLSplitEquation(val head : String, val split : String, val tail1 : S
         if(head.startsWith("p")) set.add(head)
         if(tail1.startsWith("p")) set.add(tail1)
         if(tail2.startsWith("p")) set.add(tail2)
+        set.add(frml.toString())
     }
 
     override fun toSMT(): String
-        = "(assert (<= ${head} (+ (* ${split} ${tail1}) (* (- 1 ${split}) ${tail2}))))"
+        = "(assert (& ($frml (<= ${head} (+ (* ${split} ${tail1}) (* (- 1 ${split}) ${tail2}))))))"
 }
 
 data class PDLAbstractVar(val name : String) : PDLType, AbstractVar{
@@ -158,12 +162,12 @@ object PDLSkip : Rule(Modality(
         var stNode: StaticNode? = null
         if(res.evaluate() && spec.prob.startsWith("p")){ //We need to do this in a proper way
             println(spec.prob + "<=1")
-            val eqT = PDLBindEquation(spec.prob, "1")
+            val eqT = PDLBindEquation(spec.prob, "1", input.condition)
             stNode = StaticNode("",spec.equations.plus(eqT))//.plus(eqT)
 //            println("Static Node: " + stNode.toString())
         } else if(spec.prob.startsWith("p")){
             println(spec.prob + "<=0")
-            val eqF = PDLSetEquation(spec.prob,"0")
+            val eqF = PDLSetEquation(spec.prob,"0",input.condition)
             stNode = StaticNode("",spec.equations.plus(eqF))
 //            println("Static Node: " + stNode.toString())
         } else  stNode = StaticNode("",spec.equations)
@@ -290,7 +294,7 @@ object PDLSkip : Rule(Modality(
             val p1 = FreshGenerator.getFreshPP().toSMT()
             val p2 = FreshGenerator.getFreshPP().toSMT()
             val p = spec.prob
-            val eqs  = spec.equations.plus(PDLMinEquation(p,p1,p2))
+            val eqs  = spec.equations.plus(PDLMinEquation(p,p1,p2, input.condition))
 
             //then
            // val guardYes = exprToForm(guardExpr)
@@ -336,7 +340,7 @@ class PDLProbIf(val repos: Repository) : Rule(Modality(
         //then
         val bodyYes = appendStmt(cond.map[StmtAbstractVar("THEN")] as Stmt, contBody)
         val updateYes = input.update
-        val newEq = spec.equations.plus(PDLSplitEquation(p, expTerm, p1, p2))
+        val newEq = spec.equations.plus(PDLSplitEquation(p, expTerm, p1, p2, input.condition))
         val resThen = SymbolicState(
             input.condition,
             updateYes,
@@ -387,7 +391,7 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
         val p = spec.prob
 
         // init
-        val initEq = PDLSplitEquation(pPrime, pPrime, p3, p4)
+        val initEq = PDLSplitEquation(pPrime, pPrime, p3, p4, input.condition)
         val newEq = spec.equations.plus(initEq)
 
         val init = SymbolicState(
@@ -422,7 +426,7 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
         val guardNo = Not(exprToForm(guardExpr))
         val newContBody = appendStmt(contBody, SkipStmt)
         // use case: inv & !guard
-        val newEq2 = newEq.plus(PDLSplitEquation(p, pPrime, p1, p2))
+        val newEq2 = newEq.plus(PDLSplitEquation(p, pPrime, p1, p2, input.condition))
         val resUse1 = SymbolicState(
             And(spec.whileInv,guardNo) ,
             EmptyUpdate,

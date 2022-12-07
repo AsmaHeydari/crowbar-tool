@@ -4,11 +4,11 @@ module Dummy;
 data NewSpec = Demonic | Prob(Rat);
 
 [Spec: Ensures(c == 11)]
-[Spec: Prob(1 - (1/(2*2*2*2*2*2*2*2*2*2)))]
+[Spec: Prob(1 - (1/(pow(2, N))))]
 {
 Int b = 1;
 Int c = 10;
-
+Int N = 0;
 [Spec: WhileInv(c + b == 11)]
 while( b != 0 ){
     if( b <= c ) {
@@ -18,6 +18,7 @@ while( b != 0 ){
         if( True ) { b = 0; }
         else { b = 2 * b; }
     }
+    N++;
 }
 
 }
