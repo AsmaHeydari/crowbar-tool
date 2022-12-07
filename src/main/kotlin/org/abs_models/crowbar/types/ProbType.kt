@@ -157,8 +157,8 @@ object PDLSkip : Rule(Modality(
 
         var stNode: StaticNode? = null
         if(res.evaluate() && spec.prob.startsWith("p")){ //We need to do this in a proper way
-            println(spec.prob + ">=1")
-            val eqT = PDLSetEquation(spec.prob, "1")
+            println(spec.prob + "<=1")
+            val eqT = PDLBindEquation(spec.prob, "1")
             stNode = StaticNode("",spec.equations.plus(eqT))//.plus(eqT)
 //            println("Static Node: " + stNode.toString())
         } else if(spec.prob.startsWith("p")){

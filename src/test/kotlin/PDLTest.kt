@@ -26,7 +26,7 @@ class PDLTest : CrowbarTest() {
 				smtPath = smt
 				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExample1.abs")))
 				val res = model.exctractMainNode(pdl)
-				executeNode(res, repos, pdl) shouldBe true
+				executeNode(res, repos, pdl) shouldBe false
 			}
 
 			"$smt pdlExample2" {
