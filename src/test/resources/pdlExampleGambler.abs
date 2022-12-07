@@ -1,0 +1,23 @@
+module Dummy;
+/*Expected result from Z3: true*/
+/*Generated result by Z3: true*/
+data NewSpec = Demonic | Prob(Rat);
+
+[Spec: Ensures(c == 11)]
+[Spec: Prob(1 - (1/(2*2*2*2*2*2*2*2*2*2)))]
+{
+Int b = 1;
+Int c = 10;
+
+[Spec: WhileInv(c + b == 11)]
+while( b != 0 ){
+    if( b <= c ) {
+        c = c - b;
+        c = c + (2 * b);
+        [Spec: Prob(1/2)]
+        if( True ) { b = 0; }
+        else { b = 2 * b; }
+    }
+}
+
+}

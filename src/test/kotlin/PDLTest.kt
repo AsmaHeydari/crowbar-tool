@@ -63,6 +63,13 @@ class PDLTest : CrowbarTest() {
 				val res = model.exctractMainNode(pdl)
 				executeNode(res, repos, pdl) shouldBe true
 			}
+
+			"$smt pdlExampleGambler" {
+				smtPath = smt
+				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleGambler.abs")))
+				val res = model.exctractMainNode(pdl)
+				executeNode(res, repos, pdl) shouldBe true
+			}
 		}
 	}
 }
