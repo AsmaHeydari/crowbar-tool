@@ -25,7 +25,7 @@ import kotlin.system.exitProcess
 
 enum class Verbosity { SILENT, NORMAL, V, VV, VVV }
 
-var tmpPath = "/tmp/"
+var tmpPath = "C:\\Users\\Asma\\git\\crowbar-tool\\"
 var smtPath  = "z3"
 //var timeoutS  = 100
 var verbosity = Verbosity.NORMAL

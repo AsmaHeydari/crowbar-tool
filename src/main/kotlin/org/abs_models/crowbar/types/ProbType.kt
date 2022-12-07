@@ -401,11 +401,12 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
 
         // Step Cases:
         val guard = exprToForm(guardExpr)
+        val newBody = appendStmt(body, SkipStmt)
         // step case1: inv & guard
         val resStep1 = SymbolicState(
             And(spec.whileInv,guard) ,
             EmptyUpdate,
-            Modality(body, PDLSpec(spec.whileInv, p3, newEq, spec.whileInv)),
+            Modality(newBody, PDLSpec(spec.whileInv, p3, newEq, spec.whileInv)),
             input.exceptionScopes
         )
         println("While Step Case 1: " + newEq)
@@ -413,18 +414,19 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
         val resStep2 = SymbolicState(
             And(Not(spec.whileInv),guard) ,
             EmptyUpdate,
-            Modality(body, PDLSpec(spec.whileInv, p4, newEq, spec.whileInv)),
+            Modality(newBody, PDLSpec(spec.whileInv, p4, newEq, spec.whileInv)),
             input.exceptionScopes
         )
         println("While Step Case 2: " + newEq)
         //Use Cases:
         val guardNo = Not(exprToForm(guardExpr))
+        val newContBody = appendStmt(contBody, SkipStmt)
         // use case: inv & !guard
         val newEq2 = newEq.plus(PDLSplitEquation(p, pPrime, p1, p2))
         val resUse1 = SymbolicState(
             And(spec.whileInv,guardNo) ,
             EmptyUpdate,
-            Modality(contBody, PDLSpec(spec.post, p1, newEq2, spec.whileInv)),
+            Modality(newContBody, PDLSpec(spec.post, p1, newEq2, spec.whileInv)),
             input.exceptionScopes
         )
         println("While Use Case 1: " + newEq2)
@@ -433,7 +435,7 @@ class PDLWhile(val repos: Repository) : Rule(Modality(
         val resUse2 = SymbolicState(
             And(Not(spec.whileInv),guardNo),
             EmptyUpdate,
-            Modality(contBody, PDLSpec(spec.post, p2, newEq2, spec.whileInv)),
+            Modality(newContBody, PDLSpec(spec.post, p2, newEq2, spec.whileInv)),
             input.exceptionScopes
         )
         println("While Use Case 2: " + newEq2)
