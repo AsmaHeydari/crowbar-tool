@@ -298,7 +298,20 @@ fun translateType(type:Type) : String{
 //My method to get the equations and give a string
 
 fun generateSMT4PDL(probVars : Set<String>, equations : Set<PDLEquation>) : String{
-    var heaps = mutableSetOf<String>()
+
+
+    var vars = mutableSetOf<ProgVar>()
+    for( e in equations){
+        vars.addAll(e.collectProgVars())
+    }
+
+
+
+    var heaps = mutableSetOf<String>("\n" +
+            "    (define-sort ABS.StdLib.Int () Int)\n" +
+            "    (define-sort ABS.StdLib.Float () Real)\n" +
+            "    (define-sort ABS.StdLib.Bool () Bool)\n" +
+            "    (define-sort ABS.StdLib.String () String)")
     heaps.add("(define-fun min ((x Real) (y Real)) Real\n" +
             "  (ite (< x y) x y))\n"+
             "(define-fun max ((x Real) (y Real)) Real\n" +
@@ -310,6 +323,10 @@ fun generateSMT4PDL(probVars : Set<String>, equations : Set<PDLEquation>) : Stri
     probVars.forEach{
         heaps.add("(assert (<= 0 ${it} ))")
         heaps.add("(assert (<= ${it} 1 ))")
+    }
+
+    vars.forEach{
+        heaps.add("(declare-const ${it.name} ${translateType(it.concrType)})")
     }
 
     equations.forEach{

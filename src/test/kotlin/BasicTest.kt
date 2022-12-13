@@ -13,6 +13,7 @@ import org.abs_models.crowbar.rule.match
 import org.abs_models.crowbar.tree.SymbolicNode
 import org.abs_models.crowbar.tree.nextPITStrategy
 import org.abs_models.crowbar.types.PostInvariantPair
+import org.abs_models.crowbar.types.renameFormula
 import java.nio.file.Paths
 import java.util.*
 
@@ -32,6 +33,13 @@ class BasicTest : StringSpec() {
         val pattern3 = addExpr(ExprAbstractVar("A"), Const("1"))
 
         ADTRepos.initBuiltIn()
+        "rename"{
+            val f = Predicate("=", listOf(ProgVar("v1"), ProgVar("v2")))
+            val g = renameFormula(f)
+            println("f: " + f.prettyPrint() + "g: "+ g.prettyPrint())
+            assert (f!=g)
+        }
+
         "collect"{
             val stmt = WhileStmt(SExpr(">=", listOf(Field("f",int), Const("0"))),
                                  SeqStmt(AssignStmt(Field("g",int), ProgVar("v")), SkipStmt),

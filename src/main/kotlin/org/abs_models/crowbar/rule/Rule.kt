@@ -11,7 +11,7 @@ object FreshGenerator {
     private var count = 0
     fun createPlaceholder(dType : Type) : ProgVar = Placeholder("ph_" + (count++), dType)
     fun getFreshWildCard(dType : Type) : WildCardVar = WildCardVar("wc_" + (count++), dType)
-    fun getFreshProgVar(dType : Type) : ProgVar = ProgVar("pv_" + (count++), dType)
+    fun getFreshProgVar(dType : Type) : ProgVar = ProgVar("vp" + (count++), dType)
     fun getFreshPP() : PP = PPId(count++)
     fun getFreshFuture(dType : Type) : ProgVar = ProgVar("fut_"+ (count++), ADTRepos.model!!.getFutType(dType))
     fun getFreshObjectId(className: String, map: List<Expr>, type: Type): Expr {

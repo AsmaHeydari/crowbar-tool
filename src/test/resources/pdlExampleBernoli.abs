@@ -10,7 +10,7 @@ Int i = 0;
 Int c = 0;
 Int s = 0;
 
-[Spec: WhileInv(0 <= i && i <= 20 && 0 <= s && s < 20 && 0 <= c && c < 20)]
+[Spec: WhileInv((((c / i) - 0.5) > 0.4) || (((c / i) - 0.5) < -0.4))]
 while( i < 20 ){
     [Spec: Prob(1/2)]
     if( True ) { s = 0; }

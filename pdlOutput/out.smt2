@@ -1,188 +1,65 @@
-;header
-        ; static header
-    (set-option :produce-models true)
-    (set-logic ALL)
-    (declare-fun valueOf_Int (Int) Int)
-    (declare-fun hasRole (Int String) Bool)
+(set-option :produce-unsat-cores true)
     (define-sort ABS.StdLib.Int () Int)
     (define-sort ABS.StdLib.Float () Real)
     (define-sort ABS.StdLib.Bool () Bool)
     (define-sort ABS.StdLib.String () String)
-    (declare-const Unit Int)
-    (assert (= Unit 0))
-    (declare-sort UNBOUND 0)
-    
-(define-sort Field () Int)
-    ; end static header
-;primitive type declaration
-    (declare-sort ABS.StdLib.Rat 0)
-	(declare-sort ABS.StdLib.Fut 0)
-;valueOf
-    (declare-fun   valueOf_ABS_StdLib_Int (ABS.StdLib.Fut) Int)
-(declare-fun   valueOf_ABS_StdLib_Bool(ABS.StdLib.Fut) Bool)
-;data type declaration
-    ; DataTypes declaration
-(declare-datatypes  
-	((ABS.StdLib.Exception 0) (Interface 0) (Dummy.NewSpec 0) (ABS.StdLib.Unit 0) (ABS.StdLib.Maybe 0) (ABS.StdLib.Either 0) (ABS.StdLib.Pair 0) (ABS.StdLib.Triple 0) (ABS.StdLib.Set 0) (ABS.StdLib.List 0) (ABS.StdLib.Map 0)) 
-	(
-	((ABS.StdLib.Exceptions.DivisionByZeroException) (ABS.StdLib.Exceptions.AssertionFailException) (ABS.StdLib.Exceptions.PatternMatchFailException) (ABS.StdLib.Exceptions.NullPointerException) (ABS.StdLib.Exceptions.StackOverflowEcxeption) (ABS.StdLib.Exceptions.HeapOverflowException) (ABS.StdLib.Exceptions.KeyboardInterruptException) (ABS.StdLib.Exceptions.ObjectDeadException)) 
-	((ABS.StdLib.Object)) 
-	((Dummy.Demonic) (Dummy.Prob (Dummy.Prob_0 ABS.StdLib.Rat))) 
-	((ABS.StdLib.Unit)) 
-	((ABS.StdLib.Nothing) (ABS.StdLib.Just (ABS.StdLib.Just_0 ABS.StdLib.Int))) 
-	((ABS.StdLib.Left (ABS.StdLib.Left_0 ABS.StdLib.Int)) (ABS.StdLib.Right (ABS.StdLib.Right_0 ABS.StdLib.Int))) 
-	((ABS.StdLib.Pair (ABS.StdLib.Pair_0 ABS.StdLib.Int) (ABS.StdLib.Pair_1 ABS.StdLib.Int))) 
-	((ABS.StdLib.Triple (ABS.StdLib.Triple_0 ABS.StdLib.Int) (ABS.StdLib.Triple_1 ABS.StdLib.Int) (ABS.StdLib.Triple_2 ABS.StdLib.Int))) 
-	((ABS.StdLib.EmptySet) (ABS.StdLib.Insert (ABS.StdLib.Insert_0 ABS.StdLib.Int) (ABS.StdLib.Insert_1 ABS.StdLib.Set))) 
-	((ABS.StdLib.Nil) (ABS.StdLib.Cons (ABS.StdLib.Cons_0 ABS.StdLib.Int) (ABS.StdLib.Cons_1 ABS.StdLib.List))) 
-	((ABS.StdLib.EmptyMap) (ABS.StdLib.InsertAssoc (ABS.StdLib.InsertAssoc_0 ABS.StdLib.Pair) (ABS.StdLib.InsertAssoc_1 ABS.StdLib.Map)))))
-(declare-fun   valueOf_Dummy_NewSpec (ABS.StdLib.Fut) Dummy.NewSpec)
-(declare-fun   valueOf_ABS_StdLib_Unit (ABS.StdLib.Fut) ABS.StdLib.Unit)
-(declare-fun   valueOf_ABS_StdLib_Maybe (ABS.StdLib.Fut) ABS.StdLib.Maybe)
-(declare-fun   valueOf_ABS_StdLib_Either (ABS.StdLib.Fut) ABS.StdLib.Either)
-(declare-fun   valueOf_ABS_StdLib_Pair (ABS.StdLib.Fut) ABS.StdLib.Pair)
-(declare-fun   valueOf_ABS_StdLib_Triple (ABS.StdLib.Fut) ABS.StdLib.Triple)
-(declare-fun   valueOf_ABS_StdLib_Set (ABS.StdLib.Fut) ABS.StdLib.Set)
-(declare-fun   valueOf_ABS_StdLib_List (ABS.StdLib.Fut) ABS.StdLib.List)
-(declare-fun   valueOf_ABS_StdLib_Map (ABS.StdLib.Fut) ABS.StdLib.Map)
-
-
-;interface type declaration
-    (declare-fun   implements (ABS.StdLib.Int Interface) Bool)
-    (declare-fun   extends (Interface Interface) Bool)
-    (assert (forall ((i1 Interface) (i2 Interface) (i3 Interface))
-     (=> (and (extends i1 i2) (extends i2 i3))
-      (extends i1 i3))))
-      
-    (assert (forall ((i1 Interface) (i2 Interface) (object ABS.StdLib.Int))
-     (=> (and (extends i1 i2) (implements object i1))
-      (implements object i2))))
-      
-      
-      
-;generics declaration
-    
-;heaps declaration
-    
-; ABS.StdLib.Int Heap declaration
-(define-sort Heap_ABS_StdLib_Int () (Array Field ABS.StdLib.Int))
-(declare-const heap_ABS_StdLib_Int Heap_ABS_StdLib_Int)
-(declare-const old_ABS_StdLib_Int Heap_ABS_StdLib_Int)
-(declare-const last_ABS_StdLib_Int Heap_ABS_StdLib_Int)
-(declare-fun anon_ABS_StdLib_Int (Heap_ABS_StdLib_Int) Heap_ABS_StdLib_Int)
-; ABS.StdLib.Float Heap declaration
-(define-sort Heap_ABS_StdLib_Float () (Array Field ABS.StdLib.Float))
-(declare-const heap_ABS_StdLib_Float Heap_ABS_StdLib_Float)
-(declare-const old_ABS_StdLib_Float Heap_ABS_StdLib_Float)
-(declare-const last_ABS_StdLib_Float Heap_ABS_StdLib_Float)
-(declare-fun anon_ABS_StdLib_Float (Heap_ABS_StdLib_Float) Heap_ABS_StdLib_Float)
-; Dummy.NewSpec Heap declaration
-(define-sort Heap_Dummy_NewSpec () (Array Field Dummy.NewSpec))
-(declare-const heap_Dummy_NewSpec Heap_Dummy_NewSpec)
-(declare-const old_Dummy_NewSpec Heap_Dummy_NewSpec)
-(declare-const last_Dummy_NewSpec Heap_Dummy_NewSpec)
-(declare-fun anon_Dummy_NewSpec (Heap_Dummy_NewSpec) Heap_Dummy_NewSpec)
-; ABS.StdLib.Unit Heap declaration
-(define-sort Heap_ABS_StdLib_Unit () (Array Field ABS.StdLib.Unit))
-(declare-const heap_ABS_StdLib_Unit Heap_ABS_StdLib_Unit)
-(declare-const old_ABS_StdLib_Unit Heap_ABS_StdLib_Unit)
-(declare-const last_ABS_StdLib_Unit Heap_ABS_StdLib_Unit)
-(declare-fun anon_ABS_StdLib_Unit (Heap_ABS_StdLib_Unit) Heap_ABS_StdLib_Unit)
-; ABS.StdLib.String Heap declaration
-(define-sort Heap_ABS_StdLib_String () (Array Field ABS.StdLib.String))
-(declare-const heap_ABS_StdLib_String Heap_ABS_StdLib_String)
-(declare-const old_ABS_StdLib_String Heap_ABS_StdLib_String)
-(declare-const last_ABS_StdLib_String Heap_ABS_StdLib_String)
-(declare-fun anon_ABS_StdLib_String (Heap_ABS_StdLib_String) Heap_ABS_StdLib_String)
-; ABS.StdLib.Rat Heap declaration
-(define-sort Heap_ABS_StdLib_Rat () (Array Field ABS.StdLib.Rat))
-(declare-const heap_ABS_StdLib_Rat Heap_ABS_StdLib_Rat)
-(declare-const old_ABS_StdLib_Rat Heap_ABS_StdLib_Rat)
-(declare-const last_ABS_StdLib_Rat Heap_ABS_StdLib_Rat)
-(declare-fun anon_ABS_StdLib_Rat (Heap_ABS_StdLib_Rat) Heap_ABS_StdLib_Rat)
-; ABS.StdLib.Bool Heap declaration
-(define-sort Heap_ABS_StdLib_Bool () (Array Field ABS.StdLib.Bool))
-(declare-const heap_ABS_StdLib_Bool Heap_ABS_StdLib_Bool)
-(declare-const old_ABS_StdLib_Bool Heap_ABS_StdLib_Bool)
-(declare-const last_ABS_StdLib_Bool Heap_ABS_StdLib_Bool)
-(declare-fun anon_ABS_StdLib_Bool (Heap_ABS_StdLib_Bool) Heap_ABS_StdLib_Bool)
-; ABS.StdLib.Fut Heap declaration
-(define-sort Heap_ABS_StdLib_Fut () (Array Field ABS.StdLib.Fut))
-(declare-const heap_ABS_StdLib_Fut Heap_ABS_StdLib_Fut)
-(declare-const old_ABS_StdLib_Fut Heap_ABS_StdLib_Fut)
-(declare-const last_ABS_StdLib_Fut Heap_ABS_StdLib_Fut)
-(declare-fun anon_ABS_StdLib_Fut (Heap_ABS_StdLib_Fut) Heap_ABS_StdLib_Fut)
-; ABS.StdLib.Maybe Heap declaration
-(define-sort Heap_ABS_StdLib_Maybe () (Array Field ABS.StdLib.Maybe))
-(declare-const heap_ABS_StdLib_Maybe Heap_ABS_StdLib_Maybe)
-(declare-const old_ABS_StdLib_Maybe Heap_ABS_StdLib_Maybe)
-(declare-const last_ABS_StdLib_Maybe Heap_ABS_StdLib_Maybe)
-(declare-fun anon_ABS_StdLib_Maybe (Heap_ABS_StdLib_Maybe) Heap_ABS_StdLib_Maybe)
-; ABS.StdLib.Either Heap declaration
-(define-sort Heap_ABS_StdLib_Either () (Array Field ABS.StdLib.Either))
-(declare-const heap_ABS_StdLib_Either Heap_ABS_StdLib_Either)
-(declare-const old_ABS_StdLib_Either Heap_ABS_StdLib_Either)
-(declare-const last_ABS_StdLib_Either Heap_ABS_StdLib_Either)
-(declare-fun anon_ABS_StdLib_Either (Heap_ABS_StdLib_Either) Heap_ABS_StdLib_Either)
-; ABS.StdLib.Pair Heap declaration
-(define-sort Heap_ABS_StdLib_Pair () (Array Field ABS.StdLib.Pair))
-(declare-const heap_ABS_StdLib_Pair Heap_ABS_StdLib_Pair)
-(declare-const old_ABS_StdLib_Pair Heap_ABS_StdLib_Pair)
-(declare-const last_ABS_StdLib_Pair Heap_ABS_StdLib_Pair)
-(declare-fun anon_ABS_StdLib_Pair (Heap_ABS_StdLib_Pair) Heap_ABS_StdLib_Pair)
-; ABS.StdLib.Triple Heap declaration
-(define-sort Heap_ABS_StdLib_Triple () (Array Field ABS.StdLib.Triple))
-(declare-const heap_ABS_StdLib_Triple Heap_ABS_StdLib_Triple)
-(declare-const old_ABS_StdLib_Triple Heap_ABS_StdLib_Triple)
-(declare-const last_ABS_StdLib_Triple Heap_ABS_StdLib_Triple)
-(declare-fun anon_ABS_StdLib_Triple (Heap_ABS_StdLib_Triple) Heap_ABS_StdLib_Triple)
-; ABS.StdLib.Set Heap declaration
-(define-sort Heap_ABS_StdLib_Set () (Array Field ABS.StdLib.Set))
-(declare-const heap_ABS_StdLib_Set Heap_ABS_StdLib_Set)
-(declare-const old_ABS_StdLib_Set Heap_ABS_StdLib_Set)
-(declare-const last_ABS_StdLib_Set Heap_ABS_StdLib_Set)
-(declare-fun anon_ABS_StdLib_Set (Heap_ABS_StdLib_Set) Heap_ABS_StdLib_Set)
-; ABS.StdLib.List Heap declaration
-(define-sort Heap_ABS_StdLib_List () (Array Field ABS.StdLib.List))
-(declare-const heap_ABS_StdLib_List Heap_ABS_StdLib_List)
-(declare-const old_ABS_StdLib_List Heap_ABS_StdLib_List)
-(declare-const last_ABS_StdLib_List Heap_ABS_StdLib_List)
-(declare-fun anon_ABS_StdLib_List (Heap_ABS_StdLib_List) Heap_ABS_StdLib_List)
-; ABS.StdLib.Map Heap declaration
-(define-sort Heap_ABS_StdLib_Map () (Array Field ABS.StdLib.Map))
-(declare-const heap_ABS_StdLib_Map Heap_ABS_StdLib_Map)
-(declare-const old_ABS_StdLib_Map Heap_ABS_StdLib_Map)
-(declare-const last_ABS_StdLib_Map Heap_ABS_StdLib_Map)
-(declare-fun anon_ABS_StdLib_Map (Heap_ABS_StdLib_Map) Heap_ABS_StdLib_Map)
-;wildcards declaration
-    
-    
-; parametric functions decl
-    ; no parametric declarations
-;functions declaration
-    
-;generic functions declaration :to be implemented and added
-;    
-;fields declaration
-    
-;variables declaration
-    (declare-const i ABS.StdLib.Int) ; i:ABS.StdLib.Int
-
-	(declare-const c ABS.StdLib.Int) ; c:<UNKNOWN>
-
-;objects declaration
-    
-    
-;objects interface declaration
-    
-;funcs declaration
-    
-;fields constraints
-    
-    ; Precondition
-    (assert (and (not true) (not (<  i 10))) )
-    ; Negated postcondition
-    (assert (not (or (>  (-  (/  c 10) 0.5) 0.4) (<  (-  (/  c 10) 0.5) (- 0.4))))) 
-    (check-sat)
-    
-    (exit)
+	(define-fun min ((x Real) (y Real)) Real
+  (ite (< x y) x y))
+(define-fun max ((x Real) (y Real)) Real
+  (ite (< x y) y x))
+	(declare-fun p5 () Real)
+	(declare-fun p3 () Real)
+	(declare-fun p4 () Real)
+	(declare-fun p32 () Real)
+	(declare-fun p33 () Real)
+	(declare-fun p89 () Real)
+	(declare-fun p90 () Real)
+	(declare-fun p1 () Real)
+	(declare-fun p2 () Real)
+	(assert (! (<= 0 p5 ) :named A1))
+	(assert (! (<= p5 1 ) :named A2))
+	(assert (! (<= 0 p3 ) :named A3))
+	(assert (! (<= p3 1 ) :named A4))
+	(assert (! (<= 0 p4 ) :named A5))
+	(assert (! (<= p4 1 ) :named A6))
+	(assert (! (<= 0 p32 ) :named A7))
+	(assert (! (<= p32 1 ) :named A8))
+	(assert (! (<= 0 p33 ) :named A9))
+	(assert (! (<= p33 1 ) :named A10))
+	(assert (! (<= 0 p89 ) :named A11))
+	(assert (! (<= p89 1 ) :named A12))
+	(assert (! (<= 0 p90 ) :named A13))
+	(assert (! (<= p90 1 ) :named A14))
+	(assert (! (<= 0 p1 ) :named A15))
+	(assert (! (<= p1 1 ) :named A16))
+	(assert (! (<= 0 p2 ) :named A17))
+	(assert (! (<= p2 1 ) :named A18))
+	(declare-const vp34 ABS.StdLib.Int)
+	(declare-const vp61 ABS.StdLib.Int)
+	(declare-const vp88 ABS.StdLib.Int)
+	(declare-const vp91 ABS.StdLib.Int)
+	(declare-const vp118 ABS.StdLib.Int)
+	(declare-const vp145 ABS.StdLib.Int)
+	(declare-const vp172 ABS.StdLib.Int)
+	(declare-const vp199 ABS.StdLib.Int)
+	(assert (! (<= p5 (+ (* p5 p3) (* (- 1 p5) p4))) :named A19))
+	(assert (! (<= p5 1) :named A20))=
+	(assert (! (<= p3 (+ (* (/  1 2) p32) (* (- 1 (/  1 2)) p33))) :named A21))
+	(assert (! (and true (<  vp34 20)) :named A22))
+	(assert (! (<= p32 1) :named A23))
+(assert (! (and true (<  vp61 20)) :named A24))
+	(assert (! (<= p33 1) :named A25))
+(assert (! (and true (<  vp88 20)) :named A26))
+	(assert (! (<= p4 (+ (* (/  1 2) p89) (* (- 1 (/  1 2)) p90))) :named A27))
+	(assert (! (and (not true) (<  vp91 20)) :named A28))
+	(assert (! (<= p89 1)  :named A29))
+(assert (! (and (not true) (<  vp118 20)) :named A30))
+	(assert (! (<= p90 1) :named A31))
+(assert (! (and (not true) (<  vp145 20)) :named A32))
+	(assert (! (<= (/  1 2) (+ (* p5 p1) (* (- 1 p5) p2))) :named A33))
+	(assert (! (= p1 0) :named A34))
+(assert (! (and true (not (<  vp172 20)))  :named A35))
+	(assert (! (<= p2 1)  :named A36))
+(assert (! (and (not true) (not (<  vp199 20))) :named A37))
+(check-sat)
+(get-unsat-core)

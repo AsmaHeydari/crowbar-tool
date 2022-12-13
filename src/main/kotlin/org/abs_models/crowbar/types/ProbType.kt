@@ -1,19 +1,28 @@
 package org.abs_models.crowbar.types
 
 import org.abs_models.crowbar.data.*
-import org.abs_models.crowbar.interfaces.translateStatement
+import org.abs_models.crowbar.data.AssignStmt
+import org.abs_models.crowbar.data.IfStmt
+import org.abs_models.crowbar.data.SkipStmt
+import org.abs_models.crowbar.data.Stmt
+import org.abs_models.crowbar.data.WhileStmt
+import org.abs_models.crowbar.interfaces.*
 import org.abs_models.crowbar.main.*
 import org.abs_models.crowbar.rule.FreshGenerator
 import org.abs_models.crowbar.rule.MatchCondition
 import org.abs_models.crowbar.rule.Rule
 import org.abs_models.crowbar.tree.*
-import org.abs_models.frontend.ast.ClassDecl
-import org.abs_models.frontend.ast.FunctionDecl
-import org.abs_models.frontend.ast.MainBlock
-import org.abs_models.frontend.ast.Model
+import org.abs_models.frontend.ast.*
 import java.util.*
 import kotlin.system.exitProcess
-
+fun renameFormula(frml : Formula) : Formula {
+    val vars = frml.collectAll(ProgVar::class) as Set<ProgVar>
+    var mMap = mapOf<ProgVar, ProgVar>()
+    for (v in vars) {
+        mMap = mMap.plus(Pair(v, FreshGenerator.getFreshProgVar(v.concrType)))
+    }
+    return subst(frml, mMap as Map<LogicElement, LogicElement>) as Formula
+}
 
 interface PDLType : DeductType {
     companion object : PDLType
@@ -58,64 +67,77 @@ interface PDLType : DeductType {
 }
 
 abstract class PDLEquation{
-    abstract fun collectVars( set : MutableSet<String>)
+    abstract fun collectProbVars(set : MutableSet<String>)
     abstract fun toSMT() : String
+
+    abstract fun collectProgVars() : Set<ProgVar>
 }
 
 data class PDLSetEquation(val head : String, val value : String, val frml : Formula) : PDLEquation(){
-    override fun collectVars(set: MutableSet<String>) {
+    private val cleanedFrml = renameFormula(deupdatify(frml) as Formula)
+    override fun collectProbVars(set: MutableSet<String>) {
         if(head.startsWith("p")) set.add(head)
         if(value.startsWith("p")) set.add(value)
-        set.add(frml.toString())
     }
 
-    override fun toSMT(): String = "(assert (&($frml (= $head $value))))"
+    override fun toSMT(): String = "(assert (= $head $value))\n" +
+            "(assert ${cleanedFrml.toSMT()})"
 
     override fun toString(): String =
         "$head = $value"
 
+    override fun collectProgVars() : Set<ProgVar> = cleanedFrml.collectAll(ProgVar::class) as Set<ProgVar>
 }
 data class PDLBindEquation(val head : String, val value : String, val frml : Formula) : PDLEquation(){
-    override fun collectVars(set: MutableSet<String>) {
+    private val cleanedFrml = renameFormula(deupdatify(frml) as Formula)
+    override fun collectProbVars(set: MutableSet<String>) {
         if(head.startsWith("p")) set.add(head)
         if(value.startsWith("p")) set.add(value)
-        set.add(frml.toString())
     }
 
-    override fun toSMT(): String = "(assert (& ($frml (<= $head $value))))"
+    override fun toSMT(): String = "(assert (<= $head $value))\n" +
+            "(assert ${cleanedFrml.toSMT()})"
 
     override fun toString(): String =
         "$head <= $value"
 
+    override fun collectProgVars() : Set<ProgVar> = cleanedFrml.collectAll(ProgVar::class) as Set<ProgVar>
 }
 data class PDLMinEquation(val head : String, val tail1 : String, val tail2 : String, val frml : Formula) : PDLEquation(){
-    override fun collectVars(set: MutableSet<String>) {
+    private val cleanedFrml = renameFormula(deupdatify(frml) as Formula)
+    override fun collectProbVars(set: MutableSet<String>) {
         if(head.startsWith("p")) set.add(head)
         if(tail1.startsWith("p")) set.add(tail1)
         if(tail2.startsWith("p")) set.add(tail2)
-        set.add(frml.toString())
     }
 
-    override fun toSMT(): String = "(assert (& ($frml (<= $head (min $tail1 $tail2)))))"
+    override fun toSMT(): String = "(assert (<= $head (min $tail1 $tail2)))" +
+            "(assert ${cleanedFrml.toSMT()})"
 
     override fun toString(): String =
         "$head <= min($tail1, $tail2)"
 
+    override fun collectProgVars() : Set<ProgVar> = cleanedFrml.collectAll(ProgVar::class) as Set<ProgVar>
 }
 
 data class PDLSplitEquation(val head : String, val split : String, val tail1 : String, val tail2 : String, val frml : Formula) : PDLEquation(){
+
+    private val cleanedFrml = renameFormula(deupdatify(frml) as Formula)
+
     override fun toString(): String =
         "$head = $split*$tail1 + (1-$split)*$tail2 "
 
-    override fun collectVars(set: MutableSet<String>) {
+    override fun collectProbVars(set: MutableSet<String>) {
         if(head.startsWith("p")) set.add(head)
         if(tail1.startsWith("p")) set.add(tail1)
         if(tail2.startsWith("p")) set.add(tail2)
-        set.add(frml.toString())
     }
 
     override fun toSMT(): String
-        = "(assert (& ($frml (<= ${head} (+ (* ${split} ${tail1}) (* (- 1 ${split}) ${tail2}))))))"
+        = "(assert (<= ${head} (+ (* ${split} ${tail1}) (* (- 1 ${split}) ${tail2}))))"+
+            "(assert ${cleanedFrml.toSMT()})"
+
+    override fun collectProgVars() : Set<ProgVar> = cleanedFrml.collectAll(ProgVar::class) as Set<ProgVar>
 }
 
 data class PDLAbstractVar(val name : String) : PDLType, AbstractVar{

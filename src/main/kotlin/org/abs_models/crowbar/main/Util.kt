@@ -5,7 +5,6 @@ import org.abs_models.crowbar.data.Function
 import org.abs_models.crowbar.data.Stmt
 import org.abs_models.crowbar.interfaces.evaluateNotSMT
 import org.abs_models.crowbar.interfaces.generateSMT4PDL
-import org.abs_models.crowbar.interfaces.genericTypeSMTName
 import org.abs_models.crowbar.interfaces.translateExpression
 import org.abs_models.crowbar.investigator.CounterexampleGenerator
 import org.abs_models.crowbar.tree.LogicNode
@@ -13,9 +12,7 @@ import org.abs_models.crowbar.tree.StaticNode
 import org.abs_models.crowbar.tree.SymbolicNode
 import org.abs_models.crowbar.tree.getStrategy
 import org.abs_models.crowbar.types.PDLEquation
-import org.abs_models.crowbar.types.booleanFunction
 import org.abs_models.frontend.ast.*
-import org.abs_models.frontend.typechecker.DataTypeType
 import org.abs_models.frontend.typechecker.Type
 import org.abs_models.frontend.typechecker.UnknownType
 import java.io.File
@@ -300,7 +297,7 @@ fun executeNode(node : SymbolicNode, repos: Repository, usedType: KClass<out Ded
                 // then give it to the evaluateSMT
 
                 l.equations.forEach{
-                    it.collectVars(probVars)
+                    it.collectProbVars(probVars)
                 }
                 equations.addAll(l.equations)
 
