@@ -1,0 +1,18 @@
+module Dummy;
+/*Expected result from Z3: ?*/
+/*Generated result by Z3: ?*/
+data NewSpec = Demonic | Prob(Rat);
+
+[Spec: Ensures(r == k)]
+[Spec: Prob(0)]
+{
+Int k = 0;
+Int r = 0;
+Int s = 0;
+
+[Spec: Prob(1/2)]
+if( True ) { k = 0; }
+else { k = 1; }
+
+r = k xor s;
+}

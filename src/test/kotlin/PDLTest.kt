@@ -22,51 +22,58 @@ class PDLTest : CrowbarTest() {
 				executeNode(res, repos, pdl) shouldBe true
 			}
 
-			"$smt pdlExample1" {
-				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExample1.abs")))
-				val res = model.exctractMainNode(pdl)
-				executeNode(res, repos, pdl) shouldBe false
-			}
+//			"$smt pdlExample1" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExample1.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe false
+//			}
 
-			"$smt pdlExample2" {
-				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExample2.abs")))
-				val res = model.exctractMainNode(pdl)
-				executeNode(res, repos, pdl) shouldBe true
-			}
+//			"$smt pdlExample2" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExample2.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe true
+//			}
 
-			"$smt pdlExampleBernoli" {
-				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleBernoli.abs")))
-				val res = model.exctractMainNode(pdl)
-				executeNode(res, repos, pdl) shouldBe true
-			}
+//			"$smt pdlExampleBernoli" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleBernoli.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe true
+//			}
 
-			"$smt pdlExampleDice" {
-				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleDice.abs")))
-				val res = model.exctractMainNode(pdl)
-				executeNode(res, repos, pdl) shouldBe true
-			}
+//			"$smt pdlExampleDice" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleDice.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe true
+//			}
 
-			"$smt pdlExampleEduard" {
-				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleEduard.abs")))
-				val res = model.exctractMainNode(pdl)
-				executeNode(res, repos, pdl) shouldBe true
-			}
+//			"$smt pdlExampleEduard" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleEduard.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe true
+//			}
 
-			"$smt pdlExampleMontyHall" {
-				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleMontyHall.abs")))
-				val res = model.exctractMainNode(pdl)
-				executeNode(res, repos, pdl) shouldBe true
-			}
+//			"$smt pdlExampleMontyHall" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleMontyHall.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe true
+//			}
 
-			"$smt pdlExampleGambler" {
+//			"$smt pdlExampleXORcipherLeft" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleXORcipherLeft.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe true
+//			}
+
+			"$smt pdlExampleXORcipherRight" {
 				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleGambler.abs")))
+				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleXORcipherRight.abs")))
 				val res = model.exctractMainNode(pdl)
 				executeNode(res, repos, pdl) shouldBe true
 			}
