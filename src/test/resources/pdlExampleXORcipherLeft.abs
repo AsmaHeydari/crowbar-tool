@@ -3,16 +3,31 @@ module Dummy;
 /*Generated result by Z3: ?*/
 data NewSpec = Demonic | Prob(Rat);
 
-[Spec: Ensures(r == k)]
+/*r == k <==> r2 == k2*/
+[Spec: Ensures ( (r==k || r2!=k2) && (r2==k2 || r!=k) )]
 [Spec: Prob(0)]
 {
 Int k = 0;
 Int r = 0;
 Int s = 0;
 
-[Spec: Prob(1/2)]
+Int k2 = 0;
+Int r2 = 0;
+Int s2 = 0;
+
+[Spec: Prob(1/4)]
 if( True ) { k = 0; }
 else { k = 1; }
 
-r = k xor s;
+/*r = k xor s;*/
+if( k!=s ) { r =1; }
+else { r=0; }
+
+[Spec: Prob(1/4)]
+if( True ) { k2 = 0; }
+else { k2 = 1; }
+
+r2 = k2;
+
+
 }

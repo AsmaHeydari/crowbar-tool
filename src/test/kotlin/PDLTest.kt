@@ -15,12 +15,12 @@ class PDLTest : CrowbarTest() {
 			println("testing with $smt as backend")
 
 
-			"$smt pdlExample0" {
-				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExample0.abs")))
-				val res = model.exctractMainNode(pdl)
-				executeNode(res, repos, pdl) shouldBe true
-			}
+//			"$smt pdlExample0" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExample0.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe true
+//			}
 
 //			"$smt pdlExample1" {
 //				smtPath = smt
@@ -64,19 +64,19 @@ class PDLTest : CrowbarTest() {
 //				executeNode(res, repos, pdl) shouldBe true
 //			}
 
-//			"$smt pdlExampleXORcipherLeft" {
-//				smtPath = smt
-//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleXORcipherLeft.abs")))
-//				val res = model.exctractMainNode(pdl)
-//				executeNode(res, repos, pdl) shouldBe true
-//			}
-
-			"$smt pdlExampleXORcipherRight" {
+			"$smt pdlExampleXORcipherLeft" {
 				smtPath = smt
-				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleXORcipherRight.abs")))
+				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleXORcipherLeft.abs")))
 				val res = model.exctractMainNode(pdl)
 				executeNode(res, repos, pdl) shouldBe true
 			}
+
+//			"$smt pdlExampleXORcipherRight" {
+//				smtPath = smt
+//				val (model, repos) = load(listOf(Paths.get("src/test/resources/pdlExampleXORcipherRight.abs")))
+//				val res = model.exctractMainNode(pdl)
+//				executeNode(res, repos, pdl) shouldBe true
+//			}
 		}
 	}
 }
